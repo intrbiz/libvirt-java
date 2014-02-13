@@ -5,6 +5,7 @@ import static org.libvirt.ErrorHandler.processError;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Additionally, this class contains internal methods to ease
  * implementing the public API.
  */
-final class Library {
+public final class Library {
     private static AtomicBoolean runLoop = new AtomicBoolean();
 
     final static Libvirt libvirt;
@@ -38,6 +39,18 @@ final class Library {
     }
 
     private Library() {}
+
+    /**
+     * Returns the version of the native libvirt library.
+     *
+     * @return major * 1,000,000 + minor * 1,000 + release
+     * @throws LibvirtException
+     */
+    public static long getVersion() throws LibvirtException {
+        LongByReference libVer = new LongByReference();
+        processError(libvirt.virGetVersion(libVer, null, null));
+        return libVer.getValue();
+    }
 
     /**
      * Free memory pointed to by ptr.
