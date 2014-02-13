@@ -1223,6 +1223,13 @@ public class Domain {
     }
 
     /**
+     * Reset a domain immediately without any guest OS shutdown.
+     */
+    public void reset() throws LibvirtException {
+        processError(libvirt.virDomainReset(this.VDP, 0));
+    }
+
+    /**
      * Revert the domain to a given snapshot.
      *
      * @see <a href=
