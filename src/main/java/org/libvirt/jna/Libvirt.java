@@ -31,7 +31,6 @@ import com.sun.jna.ptr.PointerByReference;
  *
  * LIBVIRT_0.6.0
  * virConnectRef
- * virDomainRef
  * virNetworkRef
  * virStoragePoolRef
  * virStorageVolRef
@@ -258,6 +257,7 @@ public interface Libvirt extends Library {
     int virDomainMemoryStats(DomainPointer virDomainPtr, virDomainMemoryStats[] stats, int nr_stats, int flags);
     int virDomainPinVcpu(DomainPointer virDomainPtr, int vcpu, byte[] cpumap, int maplen);
     int virDomainReboot(DomainPointer virDomainPtr, int flags);
+    int virDomainRef(DomainPointer virDomainPtr);
     int virDomainRestore(ConnectionPointer virConnectPtr, String from);
     int virDomainRevertToSnapshot(DomainSnapshotPointer virDomainSnapshotPtr, int flags);
     int virDomainResume(DomainPointer virDomainPtr);
