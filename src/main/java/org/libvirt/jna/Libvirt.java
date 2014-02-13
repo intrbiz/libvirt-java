@@ -8,6 +8,7 @@ import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.LongByReference;
+import com.sun.jna.ptr.PointerByReference;
 
 /**
  * The libvirt interface which is exposed via JNA. The complete API is
@@ -172,6 +173,7 @@ public interface Libvirt extends Library {
     int virGetVersion(LongByReference libVer, String type, LongByReference typeVer);
     int virInitialize();
     int virCopyLastError(virError error);
+    void virFree(PointerByReference ptr);
     virError virGetLastError();
     void virResetLastError();
     void virSetErrorFunc(Pointer userData, VirErrorCallback callback);
