@@ -98,6 +98,13 @@ public interface Libvirt extends Library {
         void eventCallback(ConnectionPointer virConnectPtr, DomainPointer virDomainPointer, Pointer opaque) ;
     }
 
+    /*
+     * Timeout Callback
+     */
+    interface VirEventTimeoutCallback extends Callback {
+        void tick(int timerID, Pointer opaque);
+    }
+
     Libvirt INSTANCE = (Libvirt) Native.loadLibrary(Platform.isWindows() ? "virt-0" : "virt", Libvirt.class);
 
     // Constants we need
@@ -397,4 +404,8 @@ public interface Libvirt extends Library {
     int virNWFilterGetUUID(NetworkFilterPointer virNWFilterPtr, byte[] uuidString);
     int virNWFilterGetUUIDString(NetworkFilterPointer virNWFilterPtr, byte[] uuidString);
     int virNWFilterUndefine(NetworkFilterPointer virNWFilterPtr);
+
+    // Event functions
+    int virEventAddTimeout(int milliSeconds, VirEventTimeoutCallback cb, Pointer opaque, Pointer ff);
+    int virEventRemoveTimeout(int timer);
 }
