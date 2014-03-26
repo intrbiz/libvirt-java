@@ -41,8 +41,21 @@ import com.sun.jna.ptr.LongByReference;
 public class Connect {
 
     // registered event listeners by DomainEventID
-    private Map<EventListener, Integer>[] eventListeners = makeHashMapArray(DomainEventID.LAST);
-
+    private Map<EventListener, RegisteredEventListener>[] eventListeners = makeHashMapArray(DomainEventID.LAST);
+    
+    private class RegisteredEventListener {
+	
+        public final int callbackId;
+        
+        // We need to keep a reference to the callback to prevent it from being GCed
+        @SuppressWarnings("unused")
+        public final Libvirt.VirDomainEventCallback callback;
+        
+        public RegisteredEventListener(Libvirt.VirDomainEventCallback callback, int callbackId) {
+            this.callback = callback;
+            this.callbackId = callbackId;
+        }
+    }
     @SuppressWarnings("unchecked")
     private static <K, V> HashMap<K, V>[] makeHashMapArray(int size) {
         return new HashMap[size];
@@ -517,35 +530,33 @@ public class Connect {
         if (l == null)
             return;
 
-        Map<EventListener, Integer> handlers = eventListeners[eventID];
+        Map<EventListener, RegisteredEventListener> handlers = eventListeners[eventID];
 
         if (handlers == null) return;
 
-        Integer listenerID = handlers.remove(l);
+        RegisteredEventListener listenerID = handlers.remove(l);
 
         if (listenerID != null)
-            processError(libvirt.virConnectDomainEventDeregisterAny(VCP, listenerID));
+            processError(libvirt.virConnectDomainEventDeregisterAny(VCP, listenerID.callbackId));
     }
 
     private void domainEventRegister(Domain domain, int eventID, Libvirt.VirDomainEventCallback cb, EventListener l)
         throws LibvirtException
     {
-        Map<EventListener, Integer> handlers = eventListeners[eventID];
+        Map<EventListener, RegisteredEventListener> handlers = eventListeners[eventID];
 
         if (handlers == null) {
-            handlers = new HashMap<EventListener, Integer>();
+            handlers = new HashMap<EventListener, RegisteredEventListener>();
             eventListeners[eventID] = handlers;
         } else if (handlers.containsKey(l)) {
             return;
         }
 
         DomainPointer ptr = domain == null ? null : domain.VDP;
-
-        int ret = processError(libvirt.virConnectDomainEventRegisterAny(VCP, ptr,
-                                                                        eventID, cb,
-                                                                        null, null));
-
-        handlers.put(l, ret);
+        int ret = processError(libvirt.virConnectDomainEventRegisterAny(VCP, ptr, eventID, cb, null, null));
+        // track the handler
+        // Note: it is important that the callback does not get GCed
+        handlers.put(l, new RegisteredEventListener(cb, ret));
     }
 
     void domainEventRegister(Domain domain, final IOErrorListener cb) throws LibvirtException {
